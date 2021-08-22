@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-import botio "opb_bot/lib"
-
 const egs_url = "https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=ru&country=UA&allowCountries=UA"
 
 type EGSList struct {
@@ -47,7 +45,6 @@ func ParseFreeEgsGamesUrls() (games []EGSList, err error) {
 
 		for _, offer_parent := range offers {
 			for _, offer := range offer_parent.PromotionalOffers {
-				botio.PrintType(offer)
 				now := time.Now()
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
 					productUrl := "https://www.epicgames.com/store/ru/p/" + element.ProductSlug
