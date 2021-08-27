@@ -1,13 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	lb "opb_bot/lib"
+)
 
 //github.com/PuerkitoBio/goquery html
 
 func main() {
-	bot, err := initBot()
+	bot, err := lb.InitBot()
 	if err != nil {
 		fmt.Println("Can't init opb bot ", err)
+		return
 	}
 	bot.Start()
 }
