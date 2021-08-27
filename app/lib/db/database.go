@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+type ServiceDB struct {
+	ID           int
+	Name         string
+	Client       string
+	Secret       string
+	Access_token string
+	Expire_at    *time.Time
+	Create_at    *time.Time
+	Update_at    *time.Time
+}
+
 type DBHandler struct {
 	Connection *sql.DB
 }
@@ -27,7 +38,7 @@ func (db *DBHandler) Init() (err error) {
 	} else {
 		sqlite, _ = sql.Open("sqlite3", db_file)
 	}
-	sqlite.SetMaxOpenConns(1)
+	sqlite.SetMaxOpenConns(4)
 	db.Connection = sqlite
 	return
 }
@@ -63,7 +74,23 @@ func (db *DBHandler) CheckAccessTokenExpired(service_name string) (status bool, 
 }
 
 func (db *DBHandler) RefreshAccessToken(service_name string, access_token string, expired_at time.Time) (err error) {
-	statement, err := db.Connection.Prepare("INSERT INTO service(access_token, expired_at) VALUES (?, ?, datetime('now'))")
-	_, err = statement.Exec(service_name, access_token, expired_at)
+	statement, err := db.Connection.Prepare("UPDATE service set access_token=?, expired_at=?, update_at=datetime('now') WHERE name =?")
+	if err != nil {
+		fmt.Println(err)
+	}
+	_, err = statement.Exec(access_token, expired_at, service_name)
 	return
+}
+
+func (db *DBHandler) GetService(service_name string) (*ServiceDB, error) {
+	var service ServiceDB
+	statement, err := db.Connection.Prepare("SELECT s.*  FROM service s WHERE s.name = ?")
+	err = statement.QueryRow(service_name).Scan(&service.ID, &service.Name, &service.Client,
+		&service.Secret, &service.Access_token, &service.Expire_at,
+		&service.Create_at, &service.Update_at,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &service, nil
 }

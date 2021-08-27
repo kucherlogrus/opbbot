@@ -35,7 +35,10 @@ func InitBot() (bot *OPB_Bot, err error) {
 	}
 
 	bot_handler := &BotHandler{}
-	InitHandler(bot_handler, dbHandler)
+	err = InitHandler(bot_handler, dbHandler)
+	if err != nil {
+		return nil, err
+	}
 	bot = &OPB_Bot{session, dbHandler, bot_handler}
 	return
 }
