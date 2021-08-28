@@ -69,7 +69,6 @@ func HandleIncomingMessage(handler *BotHandler, s *discordgo.Session, m *discord
 	command := getCommand(handler.command_regex, m.Content)
 	if command != "" {
 		method, ok := handler.Methods[command]
-		fmt.Println("Method: ", method, " ok: ", ok)
 		if ok {
 			in := []reflect.Value{reflect.ValueOf(handler), reflect.ValueOf(s), reflect.ValueOf(m)}
 			method.Func.Call(in)
@@ -83,6 +82,7 @@ func (handler *BotHandler) _getHelpMessage() (message string) {
 		"**__/help__** - скоманда показывающая это окно.\n" +
 		"**__/egsupdate__** - обновление списка бесплатных игр в Epic Games Store.\n" +
 		"**__/raider {сервер} {имя}__** - отображение информации персонажа в raider.io. Если не задан параметр {сервер} поиск проводится на Гордунни. Параметр сервера нужно указывать латиницей.\n" +
+		"**__/affix {имя}__** - отображается информация по аффиксу.\n" +
 		"**__/affixes__** - отображаются аффиксы на текущей неделе.\n" +
 		"**__/affixesall__** - отображаются все аффиксы из battle.net .\n"
 	return

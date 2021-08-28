@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"opb_bot/lib/egs"
+	"opb_bot/lib/utils"
 	"regexp"
 	"strings"
 	"time"
@@ -72,7 +73,6 @@ func (handler *BotHandler) Wowupdate(s *discordgo.Session, m *discordgo.MessageC
 }
 
 func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCreate) {
-	fmt.Println(m.Content)
 	params := strings.Split(m.Content, " ")
 	var realm, name string
 	params_count := len(params)
@@ -124,6 +124,27 @@ func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCrea
 	s.ChannelMessageSend(m.ChannelID, message)
 }
 
+func (handler *BotHandler) Affix(s *discordgo.Session, m *discordgo.MessageCreate) {
+	params := strings.Split(m.Content, " ")
+	params_count := len(params)
+	if params_count == 2 {
+		affix_name := strings.Title(params[1])
+		for _, v := range handler.battlenet.Affixes_map {
+			if affix_name == v.Name {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("**__%s__** - %s\n", v.Name, v.Description))
+				return
+			}
+		}
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Аффикс с названием '%s' не найден.", params[1]))
+		return
+	}
+	if params_count == 1 {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Для выполнения команды необходимо указать название аффикса", params[1]))
+		return
+	}
+	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Параметры команды заданы неверно"))
+}
+
 func (handler *BotHandler) Affixes(s *discordgo.Session, m *discordgo.MessageCreate) {
 	resp, err := handler.raider.GetCurrentAffixes()
 	if err != nil {
@@ -143,9 +164,25 @@ func (handler *BotHandler) Affixes(s *discordgo.Session, m *discordgo.MessageCre
 
 func (handler *BotHandler) Affixesall(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var message = ""
-	for _, aff := range handler.battlenet.Affixes_map {
-		message += fmt.Sprintf("%s - %s", aff.Name, aff.Description)
+	for _, v := range handler.battlenet.Affixes_map {
+		next_message := fmt.Sprintf("**__%s__** - %s\n", v.Name, v.Description)
+		current_length := len(message)
+		next_message_len := len(next_message)
+		//Must be 2000 or fewer in length.
+		fmt.Println(current_length)
+		if next_message_len+current_length > 2000 {
+			s.ChannelMessageSend(m.ChannelID, message)
+			message = next_message
+		} else {
+			message += next_message
+		}
 
 	}
-	s.ChannelMessageSend(m.ChannelID, message)
+
+	send, err := s.ChannelMessageSend(m.ChannelID, message)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	utils.PrintType(send)
 }
