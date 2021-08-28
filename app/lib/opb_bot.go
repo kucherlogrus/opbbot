@@ -22,6 +22,7 @@ func InitBot() (bot *OPB_Bot, err error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Data base initialised")
 
 	discord_access_token, err := dbHandler.GetAccessToken("discord")
 	if err != nil {
@@ -33,12 +34,13 @@ func InitBot() (bot *OPB_Bot, err error) {
 		fmt.Println("Can't create discord bot ", err)
 		return
 	}
-
+	fmt.Println("Discord bot connected")
 	bot_handler := &BotHandler{}
 	err = InitHandler(bot_handler, dbHandler)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Bot handlers initialised")
 	bot = &OPB_Bot{session, dbHandler, bot_handler}
 	return
 }

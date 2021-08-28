@@ -76,7 +76,7 @@ func (db *DBHandler) CheckAccessTokenExpired(service_name string) (status bool, 
 func (db *DBHandler) RefreshAccessToken(service_name string, access_token string, expired_at time.Time) (err error) {
 	statement, err := db.Connection.Prepare("UPDATE service set access_token=?, expired_at=?, update_at=datetime('now') WHERE name =?")
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	_, err = statement.Exec(access_token, expired_at, service_name)
 	return
@@ -93,4 +93,24 @@ func (db *DBHandler) GetService(service_name string) (*ServiceDB, error) {
 		return nil, err
 	}
 	return &service, nil
+}
+
+func (db *DBHandler) GetBattleNetAffixesRow() (rows *sql.Rows, err error) {
+	rows, err = db.Connection.Query("SELECT *  FROM wowaffixes")
+	if err != nil {
+		fmt.Println("GetBattleNetAffixesRow :", err)
+		return nil, err
+	}
+	return rows, nil
+
+}
+
+func (db *DBHandler) GetBattleNetDungeonRow() (rows *sql.Rows, err error) {
+	rows, err = db.Connection.Query("SELECT *  FROM dungeon")
+	if err != nil {
+		fmt.Println("GetBattleNetDungeonRow :", err)
+		return nil, err
+	}
+	return rows, nil
+
 }
