@@ -16,6 +16,7 @@ var (
 	main_channel_id       = "701570660014620764"
 	test_channel_id       = "879021343981596732"
 	free_games_channel_id = "710519845799723090"
+	news_channe_id        = "882370165159903283"
 )
 
 type BotHandler struct {
@@ -59,7 +60,7 @@ func InitHandler(b_handler *BotHandler, db_instance *db.DBHandler) error {
 }
 
 func isChannelSupport(channdel_id string) bool {
-	return channdel_id == test_channel_id || channdel_id == main_channel_id
+	return channdel_id == test_channel_id || channdel_id == main_channel_id || channdel_id == news_channe_id
 }
 
 func HandleIncomingMessage(handler *BotHandler, s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -80,7 +81,6 @@ func HandleIncomingMessage(handler *BotHandler, s *discordgo.Session, m *discord
 func (handler *BotHandler) _getHelpMessage() (message string) {
 	message = "**OPB_BOT** Поддерживаемые команды:\n" +
 		"**__/help__** - скоманда показывающая это окно.\n" +
-		"**__/egsupdate__** - обновление списка бесплатных игр в Epic Games Store.\n" +
 		"**__/raider__ {сервер} {имя}** - отображение информации персонажа в raider.io. Если не задан параметр {сервер} поиск проводится на Гордунни. Параметр сервера нужно указывать латиницей.\n" +
 		"**__/affix {имя}__** - отображается информация по аффиксу.\n" +
 		"**__/affixes__** - отображаются аффиксы на текущей неделе.\n" +

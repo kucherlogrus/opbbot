@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"opb_bot/lib/db"
 	"opb_bot/lib/utils"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +21,7 @@ import (
 const oauth_url = "https://us.battle.net/oauth/token"
 
 const api_url = "https://eu.api.blizzard.com"
+const news_url = "https://worldofwarcraft.com/ru-ru/news"
 
 type Affix struct {
 	ID          int
@@ -38,6 +42,12 @@ type Battlenet struct {
 	Dungeon_map map[string]Dungeon
 	Token       *db.ServiceDB
 	db_instance *db.DBHandler
+}
+
+type BattleNetNews struct {
+	ID     int
+	Tittle string
+	URL    string
 }
 
 func (bn *Battlenet) InitBattlenetApi(db_instance *db.DBHandler) error {
@@ -328,4 +338,122 @@ func (bn *Battlenet) checkTokenValid() error {
 		}
 	}
 	return nil
+}
+
+func (bn *Battlenet) GetLastNews(last_tittle string) ([]BattleNetNews, error) {
+	resp, err := http.Get(news_url)
+
+	if err != nil {
+		return nil, fmt.Errorf("Can't get news from battle net. ", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Can't get news from battle net. ", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error: %s ", err)
+	}
+
+	regex, _ := regexp.Compile("news\\/(\\d+)\\/")
+
+	var news []BattleNetNews
+
+	var accept = true
+
+	doc.Find(".NewsBlog").Each(func(i int, s *goquery.Selection) {
+		if !accept {
+			return
+		}
+
+		link_el := s.Find(".NewsBlog-link")
+		var id int
+		var tittle string
+		var url_link string
+
+		title_el := s.Find(".NewsBlog-title")
+		if title_el != nil {
+			tittle = title_el.Text()
+			if tittle == last_tittle {
+				accept = false
+				return
+			}
+		} else {
+			return
+		}
+
+		if link_el != nil {
+			link, exist := link_el.Attr("href")
+			if exist {
+				match := regex.FindStringSubmatch(link)
+				if len(match) == 2 {
+					id, err = strconv.Atoi(match[1])
+					if err != nil {
+						return
+					}
+				}
+				url_link = "https://worldofwarcraft.com" + link
+			} else {
+				return
+			}
+		}
+
+		news = append(news, BattleNetNews{id, tittle, url_link})
+
+	})
+
+	return news, nil
+
+}
+
+func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
+	resp, err := http.Get(url_link)
+
+	if err != nil {
+		return "", fmt.Errorf("Can't get new from battle net. ", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("Can't get news from battle net. ", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error: %s ", err)
+	}
+	var in_last_news = false
+	var can_append = true
+	text = ""
+	if strings.Contains(url_link, "срочные-исправления") {
+		doc.Find(".detail").Children().Each(func(i int, s *goquery.Selection) {
+			if !can_append {
+				return
+			}
+			name := goquery.NodeName(s)
+			if name == "h4" && !in_last_news {
+				text += s.Text()
+				in_last_news = true
+				return
+			}
+
+			if name == "h4" && in_last_news {
+				in_last_news = false
+				can_append = false
+				return
+			}
+
+			if in_last_news {
+				text += s.Text()
+			}
+
+		})
+	} else {
+		content_block := doc.Find("#blog")
+		text = content_block.Text()
+	}
+
+	return
 }

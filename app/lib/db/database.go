@@ -114,3 +114,24 @@ func (db *DBHandler) GetBattleNetDungeonRow() (rows *sql.Rows, err error) {
 	return rows, nil
 
 }
+
+func (db *DBHandler) GetActionValue(action string) (string, error) {
+	statement, err := db.Connection.Prepare("SELECT a.value  FROM action a WHERE a.action = ?")
+	var value string
+	err = statement.QueryRow(action).Scan(&value)
+	if err != nil {
+		fmt.Printf("Database error GetActionValue %s,: %s", action, err)
+		return "", err
+	}
+
+	return value, nil
+}
+
+func (db *DBHandler) UpdateActionValue(value string, action string) error {
+	statement, err := db.Connection.Prepare("UPDATE action set value=?, last_update=datetime('now') WHERE action =?")
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(value, action)
+	return nil
+}

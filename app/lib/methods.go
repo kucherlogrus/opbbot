@@ -16,13 +16,15 @@ func (handler *BotHandler) Help(s *discordgo.Session, m *discordgo.MessageCreate
 }
 
 func (handler *BotHandler) Clear(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.ChannelID != test_channel_id {
-		return
+	if m.ChannelID == test_channel_id || m.ChannelID == news_channe_id {
+		fmt.Println("clear all messages")
+		messages_raw, _ := s.ChannelMessages(m.ChannelID, 0, "", "", "")
+		for _, msg := range messages_raw {
+			fmt.Println("clear all message ", msg.ID)
+			s.ChannelMessageDelete(m.ChannelID, msg.ID)
+		}
 	}
-	messages_raw, _ := s.ChannelMessages(m.ChannelID, 0, m.ID, "", "")
-	for _, msg := range messages_raw {
-		s.ChannelMessageDelete(m.ChannelID, msg.ID)
-	}
+
 }
 
 func (handler *BotHandler) Egsupdates(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -32,7 +34,7 @@ func (handler *BotHandler) Egsupdates(s *discordgo.Session, m *discordgo.Message
 	}
 	chat_free_games := map[string]string{}
 	r, _ := regexp.Compile("#id:(.*)\n")
-	messages_raw, _ := s.ChannelMessages(m.ChannelID, 0, m.ID, "", "")
+	messages_raw, _ := s.ChannelMessages(free_games_channel_id, 0, m.ID, "", "")
 	for _, msg := range messages_raw {
 		match := r.FindStringSubmatch(msg.Content)
 		if len(match) == 2 {
@@ -54,22 +56,6 @@ func (handler *BotHandler) Egsupdates(s *discordgo.Session, m *discordgo.Message
 			s.ChannelMessageSend(m.ChannelID, game_string)
 		}
 	}
-}
-
-func (handler *BotHandler) Wowupdate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	resp, err := handler.raider.GetCurrentAffixes()
-	if err != nil {
-		fmt.Println("Error raiderio api call, ", err)
-	}
-	affixes := resp.AffixDetails
-	var text_affixes []string
-	text_affixes = append(text_affixes, "Аффиксы:\n-----------")
-
-	for _, aff := range affixes {
-		text_affixes = append(text_affixes, fmt.Sprintf("%s : %s\n", aff.Name, aff.Description))
-	}
-	message := strings.Join(text_affixes, "\n")
-	s.ChannelMessageSend(m.ChannelID, message)
 }
 
 func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCreate) {

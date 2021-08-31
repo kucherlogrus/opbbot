@@ -3,10 +3,12 @@ package lib
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/go-co-op/gocron"
 	"opb_bot/lib/db"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 type OPB_Bot struct {
@@ -48,6 +50,10 @@ func InitBot() (bot *OPB_Bot, err error) {
 func (bot *OPB_Bot) Start() {
 	bot.session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		HandleIncomingMessage(bot.handler, s, m)
+		if m.Content == "/newsupdate" {
+			bot.updateWoWNews()
+		}
+
 	})
 	bot.session.Identify.Intents = discordgo.IntentsGuildMessages
 	err := bot.session.Open()
@@ -55,9 +61,25 @@ func (bot *OPB_Bot) Start() {
 		fmt.Println("Error opening connection,", err)
 		return
 	}
+	bot.startCronJobs()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
 	bot.session.Close()
+}
+
+func (bot *OPB_Bot) startCronJobs() {
+	scheduler := gocron.NewScheduler(time.UTC)
+	_, err := scheduler.Cron("*/10 7-18 * * 1-5").Do(bot.updateWoWNews)
+	if err != nil {
+		fmt.Println("Can't init cron job checkCron")
+		return
+	}
+	_, err = scheduler.Cron("1 12 * * 1-5").Do(bot.Egsupdates)
+	if err != nil {
+		fmt.Println("Can't init cron job checkCron")
+		return
+	}
+	scheduler.StartAsync()
 }
