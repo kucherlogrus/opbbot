@@ -49,7 +49,12 @@ func (bot *OPB_Bot) updateWoWNews() {
 		bot.session.ChannelMessageSend(news_channe_id, fmt.Sprintln(err))
 		return
 	}
-	var last_tittle = value
+	count_news := len(news_list)
+	if count_news == 0 {
+		return
+	}
+
+	var last_tittle = news_list[0].Tittle
 	for _, new_el := range news_list {
 		last_tittle = new_el.Tittle
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
@@ -86,7 +91,7 @@ func (bot *OPB_Bot) updateWoWNews() {
 		}
 	}
 	if last_tittle != value {
-		bot.db.UpdateActionValue("wownews", value)
+		bot.db.UpdateActionValue(last_tittle, "wownews")
 	}
 
 }

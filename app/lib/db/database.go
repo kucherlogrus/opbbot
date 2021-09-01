@@ -128,10 +128,15 @@ func (db *DBHandler) GetActionValue(action string) (string, error) {
 }
 
 func (db *DBHandler) UpdateActionValue(value string, action string) error {
-	statement, err := db.Connection.Prepare("UPDATE action set value=?, last_update=datetime('now') WHERE action =?")
+
+	statement, err := db.Connection.Prepare("UPDATE action set 'value'=?, 'last_update'=datetime('now') WHERE action =?")
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	_, err = statement.Exec(value, action)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return nil
 }
