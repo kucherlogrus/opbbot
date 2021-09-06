@@ -20,6 +20,8 @@ import (
 
 const oauth_url = "https://us.battle.net/oauth/token"
 
+const debug = false
+
 const api_url = "https://eu.api.blizzard.com"
 const news_url = "https://worldofwarcraft.com/ru-ru/news"
 
@@ -434,7 +436,7 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 			}
 			name := goquery.NodeName(s)
 			if name == "h4" && !in_last_news {
-				text += s.Text()
+				text += bn.parse_text_element(s)
 				in_last_news = true
 				return
 			}
@@ -446,14 +448,55 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 			}
 
 			if in_last_news {
-				text += s.Text()
+				text += bn.parse_text_element(s)
 			}
 
 		})
 	} else {
-		content_block := doc.Find("#blog")
-		text = content_block.Text()
+		doc.Find("#blog").Children().Each(func(i int, s *goquery.Selection) {
+			text += bn.parse_text_element(s)
+		})
 	}
 
 	return
+}
+
+func (bn *Battlenet) parse_text_element(s *goquery.Selection) string {
+
+	children_count := s.Children().Length()
+	name := goquery.NodeName(s)
+	if children_count == 0 || children_count == 1 && name == "li" {
+		tag_text := bn.tag_handle(s)
+		if debug {
+			fmt.Printf("<%s>: %q\n", name, tag_text)
+		}
+
+		return tag_text
+	}
+
+	var text = ""
+	s.Children().Each(func(i int, s *goquery.Selection) {
+		text += bn.parse_text_element(s)
+	})
+
+	return text
+}
+
+func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
+	var text = ""
+	name := goquery.NodeName(s)
+	switch name {
+	case "strong":
+		text += "**__" + s.Text() + "__**\n"
+	case "li":
+		text += "  * " + s.Text() + "\n"
+	default:
+		text += s.Text() + "\n"
+	}
+	if goquery.NodeName(s.Parent()) == "ul" {
+		text = "  " + text
+	}
+	text = strings.Replace(text, "\t", "", -1)
+	text = strings.Replace(text, "\n\n", "", -1)
+	return text
 }

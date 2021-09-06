@@ -5,8 +5,6 @@ import (
 	lb "opb_bot/lib"
 )
 
-//github.com/PuerkitoBio/goquery html
-
 func main() {
 	bot, err := lb.InitBot()
 	if err != nil {

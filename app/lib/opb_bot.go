@@ -50,8 +50,11 @@ func InitBot() (bot *OPB_Bot, err error) {
 func (bot *OPB_Bot) Start() {
 	bot.session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		HandleIncomingMessage(bot.handler, s, m)
-		if m.Content == "/newsupdate" {
+		if m.Content == "/job_newsupdate" {
 			bot.updateWoWNews()
+		}
+		if m.Content == "/job_egsupdate" {
+			bot.Egsupdates()
 		}
 
 	})

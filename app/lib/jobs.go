@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"opb_bot/lib/egs"
 	"regexp"
-	"strings"
 )
 
 func (bot *OPB_Bot) Egsupdates() {
@@ -39,6 +38,14 @@ func (bot *OPB_Bot) Egsupdates() {
 }
 
 func (bot *OPB_Bot) updateWoWNews() {
+
+	//a, _ := bot.handler.battlenet.GetNewFromUrl("https://worldofwarcraft.com/ru-ru/news/23691036/срочные-исправления-30-августа-2021-г")
+	//fmt.Println("-----------------------------")
+	//fmt.Println(a)
+	//if 1 > 0 {
+	//	return
+	//}
+
 	value, err := bot.db.GetActionValue("wownews")
 	if err != nil {
 		bot.session.ChannelMessageSend(news_channe_id, fmt.Sprintln(err))
@@ -55,19 +62,23 @@ func (bot *OPB_Bot) updateWoWNews() {
 	}
 
 	var last_tittle = news_list[0].Tittle
+
+	if last_tittle == value {
+		return
+	}
+
 	for _, new_el := range news_list {
 		last_tittle = new_el.Tittle
+		if last_tittle == value {
+			break
+		}
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
 			fmt.Println(err_n)
 			continue
 		}
-		new_text = strings.Replace(new_text, "\t\t\n", "", -1)
-		new_text = strings.Replace(new_text, "\n\t", "\n", -1)
-		new_text = strings.Replace(new_text, "\n\n\t", "\n\t", -1)
-		new_text = strings.Replace(new_text, "\n\n\n", "\n", -1)
 
-		message := "**__" + new_el.Tittle + "__**" + new_text
+		message := "**__" + new_el.Tittle + "__**\n" + new_text
 		max_index := 1999
 		index := max_index
 		for {
