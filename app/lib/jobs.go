@@ -7,6 +7,7 @@ import (
 )
 
 func (bot *OPB_Bot) Egsupdates() {
+	fmt.Println("EGS update job start")
 	current_free_games, err := egs.ParseFreeEgsGamesUrls()
 	if err != nil {
 		fmt.Println("Error ParseFreeEgsGamesUrls,", err)
@@ -22,8 +23,9 @@ func (bot *OPB_Bot) Egsupdates() {
 	}
 	//remove old games
 	for key, value := range chat_free_games {
-		_, exists := current_free_games[key]
+		game, exists := current_free_games[key]
 		if !exists {
+			fmt.Println("Remove old free game: ", game.Title)
 			bot.session.ChannelMessageDelete(free_games_channel_id, value)
 		}
 	}
@@ -31,6 +33,7 @@ func (bot *OPB_Bot) Egsupdates() {
 	for key, game := range current_free_games {
 		_, exists := chat_free_games[key]
 		if !exists {
+			fmt.Println("Add new free game: ", game.Title)
 			game_string := fmt.Sprintf("\n#id:%s\nНазвание игры: %s\nОписание: %s\nURL: %s\n", game.ID, game.Title, game.Description, game.URL)
 			bot.session.ChannelMessageSend(free_games_channel_id, game_string)
 		}
@@ -45,6 +48,7 @@ func (bot *OPB_Bot) updateWoWNews() {
 	//if 1 > 0 {
 	//	return
 	//}
+	fmt.Println("Update news job start")
 
 	value, err := bot.db.GetActionValue("wownews")
 	if err != nil {
@@ -58,12 +62,14 @@ func (bot *OPB_Bot) updateWoWNews() {
 	}
 	count_news := len(news_list)
 	if count_news == 0 {
+		fmt.Println("No news found.")
 		return
 	}
 
 	var last_tittle = news_list[0].Tittle
 
 	if last_tittle == value {
+		fmt.Println("Last news was already handled.")
 		return
 	}
 
@@ -72,6 +78,7 @@ func (bot *OPB_Bot) updateWoWNews() {
 		if last_tittle == value {
 			break
 		}
+		fmt.Println("Handle title: ", last_tittle)
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
 			fmt.Println(err_n)

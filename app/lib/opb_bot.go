@@ -74,7 +74,7 @@ func (bot *OPB_Bot) Start() {
 
 func (bot *OPB_Bot) startCronJobs() {
 	scheduler := gocron.NewScheduler(time.UTC)
-	_, err := scheduler.Cron("*/10 7-18 * * 1-5").Do(bot.updateWoWNews)
+	_, err := scheduler.Cron("*/20 7-18 * * 1-5").Do(bot.updateWoWNews)
 	if err != nil {
 		fmt.Println("Can't init cron job checkCron")
 		return
