@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"opb_bot/lib/egs"
 	"regexp"
+	"strings"
 )
 
 func (bot *OPB_Bot) Egsupdates() {
@@ -73,11 +74,14 @@ func (bot *OPB_Bot) updateWoWNews() {
 		return
 	}
 
+	fmt.Println("Last handled title: ", value)
+
 	for _, new_el := range news_list {
 		last_tittle = new_el.Tittle
 		if last_tittle == value {
 			break
 		}
+
 		fmt.Println("Handle title: ", last_tittle)
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
@@ -106,6 +110,10 @@ func (bot *OPB_Bot) updateWoWNews() {
 				}
 				index--
 			}
+		}
+
+		if strings.Contains(last_tittle, "Срочные исправления") && strings.Contains(value, "Срочные исправления") {
+			break
 		}
 	}
 	if last_tittle != value {
