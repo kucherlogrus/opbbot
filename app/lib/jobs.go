@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"opb_bot/lib/egs"
 	"regexp"
-	"strings"
 )
 
 func (bot *OPB_Bot) Egsupdates() {
@@ -57,6 +56,7 @@ func (bot *OPB_Bot) updateWoWNews() {
 		return
 	}
 	news_list, err := bot.handler.battlenet.GetLastNews(value)
+
 	if err != nil {
 		bot.session.ChannelMessageSend(news_channe_id, fmt.Sprintln(err))
 		return
@@ -67,22 +67,22 @@ func (bot *OPB_Bot) updateWoWNews() {
 		return
 	}
 
-	var last_tittle = news_list[0].Tittle
+	var first_time = news_list[0].Timestr
 
-	if last_tittle == value {
+	if first_time == value {
 		fmt.Println("Last news was already handled.")
 		return
 	}
 
-	fmt.Println("Last handled title: ", value)
+	fmt.Println("Last handled new time: ", value)
 
 	for _, new_el := range news_list {
-		last_tittle = new_el.Tittle
-		if last_tittle == value {
+		last_time := new_el.Timestr
+		if last_time == value {
 			break
 		}
 
-		fmt.Println("Handle title: ", last_tittle)
+		fmt.Printf("Handle title %s: %s", new_el.Tittle, last_time)
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
 			fmt.Println(err_n)
@@ -111,13 +111,9 @@ func (bot *OPB_Bot) updateWoWNews() {
 				index--
 			}
 		}
-
-		if strings.Contains(last_tittle, "Срочные исправления") && strings.Contains(value, "Срочные исправления") {
-			break
-		}
 	}
-	if last_tittle != value {
-		bot.db.UpdateActionValue(last_tittle, "wownews")
+	if first_time != value {
+		bot.db.UpdateActionValue(first_time, "wownews")
 	}
 
 }

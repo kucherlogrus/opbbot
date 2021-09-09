@@ -47,9 +47,10 @@ type Battlenet struct {
 }
 
 type BattleNetNews struct {
-	ID     int
-	Tittle string
-	URL    string
+	ID      int
+	Tittle  string
+	URL     string
+	Timestr string
 }
 
 func (bn *Battlenet) InitBattlenetApi(db_instance *db.DBHandler) error {
@@ -342,7 +343,12 @@ func (bn *Battlenet) checkTokenValid() error {
 	return nil
 }
 
-func (bn *Battlenet) GetLastNews(last_tittle string) ([]BattleNetNews, error) {
+type newTime struct {
+	Iso      string `json:"iso8601"`
+	Relative bool   `json:"relative"`
+}
+
+func (bn *Battlenet) GetLastNews(last_time string) ([]BattleNetNews, error) {
 	resp, err := http.Get(news_url)
 
 	if err != nil {
@@ -370,21 +376,38 @@ func (bn *Battlenet) GetLastNews(last_tittle string) ([]BattleNetNews, error) {
 			return
 		}
 
-		link_el := s.Find(".NewsBlog-link")
 		var id int
 		var tittle string
 		var url_link string
+		var new_time string
+
+		time_base_el := s.Find(".NewsBlog-date.LocalizedDateMount")
+		if time_base_el != nil {
+			props, exist := time_base_el.Attr("data-props")
+			if exist {
+				var nt newTime
+				if _err := json.Unmarshal([]byte(props), &nt); _err != nil {
+					fmt.Println("Can not unmarshal JSON: ", _err)
+				}
+				new_time = nt.Iso
+
+				if new_time == last_time {
+					accept = false
+					return
+				}
+			} else {
+				return
+			}
+		}
 
 		title_el := s.Find(".NewsBlog-title")
 		if title_el != nil {
 			tittle = title_el.Text()
-			if tittle == last_tittle {
-				accept = false
-				return
-			}
 		} else {
 			return
 		}
+
+		link_el := s.Find(".NewsBlog-link")
 
 		if link_el != nil {
 			link, exist := link_el.Attr("href")
@@ -401,8 +424,7 @@ func (bn *Battlenet) GetLastNews(last_tittle string) ([]BattleNetNews, error) {
 				return
 			}
 		}
-
-		news = append(news, BattleNetNews{id, tittle, url_link})
+		news = append(news, BattleNetNews{id, tittle, url_link, new_time})
 
 	})
 
@@ -457,7 +479,6 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 			text += bn.parse_text_element(s)
 		})
 	}
-
 	return
 }
 
