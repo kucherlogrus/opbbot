@@ -43,12 +43,6 @@ func (bot *OPB_Bot) Egsupdates() {
 
 func (bot *OPB_Bot) updateWoWNews() {
 
-	//a, _ := bot.handler.battlenet.GetNewFromUrl("https://worldofwarcraft.com/ru-ru/news/23691036/срочные-исправления-30-августа-2021-г")
-	//fmt.Println("-----------------------------")
-	//fmt.Println(a)
-	//if 1 > 0 {
-	//	return
-	//}
 	fmt.Println("Update news job start")
 
 	value, err := bot.db.GetActionValue("wownews")
