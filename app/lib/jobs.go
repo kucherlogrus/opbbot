@@ -21,11 +21,12 @@ func (bot *OPB_Bot) Egsupdates() {
 			chat_free_games[match[1]] = msg.ID
 		}
 	}
+
 	//remove old games
 	for key, value := range chat_free_games {
-		game, exists := current_free_games[key]
+		_, exists := current_free_games[key]
 		if !exists {
-			fmt.Println("Remove old free game: ", game.Title)
+			fmt.Println("Remove old free game: ", key)
 			bot.session.ChannelMessageDelete(free_games_channel_id, value)
 		}
 	}
