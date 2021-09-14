@@ -511,6 +511,13 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 		text += "**__" + s.Text() + "__**\n"
 	case "li":
 		text += "  * " + s.Text() + "\n"
+	case "a":
+		ref, exist := s.Attr("href")
+		if exist {
+			text += s.Text() + ": " + ref + "\n"
+		} else {
+			text += "  * " + s.Text() + "\n"
+		}
 	default:
 		text += s.Text() + "\n"
 	}
