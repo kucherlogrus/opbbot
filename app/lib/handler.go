@@ -56,7 +56,6 @@ func InitHandler(b_handler *BotHandler, db_instance *db.DBHandler) error {
 	fmt.Printf("Battle.net affixes count: %d\n", len(b_handler.battlenet.Affixes_map))
 	fmt.Printf("Battle.net dungeons count: %d\n", len(b_handler.battlenet.Dungeon_map))
 	return nil
-
 }
 
 func isChannelSupport(channdel_id string) bool {

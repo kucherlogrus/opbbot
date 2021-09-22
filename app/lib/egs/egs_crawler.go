@@ -42,12 +42,16 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 		if offers == nil {
 			continue
 		}
+
 		for _, offerParent := range offers {
 			for _, offer := range offerParent.PromotionalOffers {
 				now := time.Now()
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
-					productUrl := "https://www.epicgames.com/store/ru/p/" + element.ProductSlug
-					games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+					if offer.DiscountSetting.DiscountPercentage == 0 {
+						productUrl := "https://www.epicgames.com/store/ru/p/" + element.ProductSlug
+						games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+					}
+
 				}
 			}
 		}

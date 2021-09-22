@@ -48,6 +48,8 @@ func InitBot() (bot *OPB_Bot, err error) {
 }
 
 func (bot *OPB_Bot) Start() {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	bot.session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		HandleIncomingMessage(bot.handler, s, m)
 		if m.Content == "/job_newsupdate" {
@@ -55,6 +57,9 @@ func (bot *OPB_Bot) Start() {
 		}
 		if m.Content == "/job_egsupdate" {
 			bot.Egsupdates()
+		}
+		if m.Content == "/bot_exit" {
+			sc <- os.Kill
 		}
 
 	})
@@ -66,8 +71,7 @@ func (bot *OPB_Bot) Start() {
 	}
 	bot.startCronJobs()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+
 	<-sc
 	bot.session.Close()
 }

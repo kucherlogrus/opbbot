@@ -16,10 +16,15 @@ func (handler *BotHandler) Help(s *discordgo.Session, m *discordgo.MessageCreate
 func (handler *BotHandler) Clear(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID == test_channel_id || m.ChannelID == news_channe_id {
 		fmt.Println("clear all messages")
-		messages_raw, _ := s.ChannelMessages(m.ChannelID, 0, "", "", "")
-		for _, msg := range messages_raw {
-			fmt.Println("clear all message ", msg.ID)
-			s.ChannelMessageDelete(m.ChannelID, msg.ID)
+		for {
+			messages_raw, _ := s.ChannelMessages(m.ChannelID, 0, "", "", "")
+			if len(messages_raw) == 0 {
+				break
+			}
+			for _, msg := range messages_raw {
+				fmt.Println("clear all message ", msg.ID)
+				s.ChannelMessageDelete(m.ChannelID, msg.ID)
+			}
 		}
 	}
 
