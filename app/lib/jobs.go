@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 	"opb_bot/lib/egs"
-	"opb_bot/lib/utils"
 	"regexp"
 	"time"
 )
@@ -15,7 +14,6 @@ func (bot *OPB_Bot) Egsupdates() {
 		fmt.Println("Error ParseFreeEgsGamesUrls,", err)
 	}
 
-	utils.PrintType(current_free_games)
 	chat_free_games := map[string]string{}
 	r, _ := regexp.Compile("#id:(.*)\n")
 	messages_raw, _ := bot.session.ChannelMessages(free_games_channel_id, 0, "", "", "")

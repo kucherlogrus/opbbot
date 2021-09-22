@@ -367,6 +367,7 @@ func (bn *Battlenet) GetLastNews(last_time string) ([]BattleNetNews, error) {
 
 	regex, _ := regexp.Compile("news\\/(\\d+)\\/")
 
+	value_t, err := time.Parse(time.RFC3339, last_time)
 	var news []BattleNetNews
 
 	var accept = true
@@ -390,8 +391,12 @@ func (bn *Battlenet) GetLastNews(last_time string) ([]BattleNetNews, error) {
 					fmt.Println("Can not unmarshal JSON: ", _err)
 				}
 				new_time = nt.Iso
+				new_time_t, err := time.Parse(time.RFC3339, new_time)
+				if err != nil {
+					return
+				}
 
-				if new_time == last_time {
+				if new_time_t.Before(value_t) {
 					accept = false
 					return
 				}
