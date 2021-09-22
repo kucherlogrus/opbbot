@@ -5,6 +5,7 @@ import (
 	"opb_bot/lib/egs"
 	"opb_bot/lib/utils"
 	"regexp"
+	"time"
 )
 
 func (bot *OPB_Bot) Egsupdates() {
@@ -53,6 +54,11 @@ func (bot *OPB_Bot) updateWoWNews() {
 		bot.session.ChannelMessageSend(news_channe_id, fmt.Sprintln(err))
 		return
 	}
+	value_t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		bot.session.ChannelMessageSend(news_channe_id, fmt.Sprintln(err))
+		return
+	}
 	news_list, err := bot.handler.battlenet.GetLastNews(value)
 
 	if err != nil {
@@ -67,28 +73,40 @@ func (bot *OPB_Bot) updateWoWNews() {
 
 	var first_time = news_list[0].Timestr
 
-	if first_time == value {
+	first_time_t, err := time.Parse(time.RFC3339, value)
+
+	if first_time_t.Before(value_t) {
 		fmt.Println("Last news was already handled.")
 		return
 	}
 
 	fmt.Println("Last handled new time: ", value)
 
+	var one_time_limit = 5
+	var send_count = 0
 	for _, new_el := range news_list {
 		last_time := new_el.Timestr
-		if last_time == value {
+		last_time_t, err := time.Parse(time.RFC3339, last_time)
+		if err != nil {
+			continue
+		}
+		if last_time_t.Before(value_t) {
 			break
 		}
+		fmt.Println(last_time, value)
 
-		fmt.Printf("Handle title %s: %s", new_el.Tittle, last_time)
+		fmt.Printf("Handle title %s: %s\n", new_el.Tittle, last_time)
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
 			fmt.Println(err_n)
 			continue
 		}
 
+		fmt.Println("len of text: ", len(new_text))
+
 		message := "**__" + new_el.Tittle + "__**\n" + new_text
 		max_index := 1999
+
 		index := max_index
 		for {
 			count := len(message)
@@ -109,8 +127,12 @@ func (bot *OPB_Bot) updateWoWNews() {
 				index--
 			}
 		}
+		send_count += 1
+		if send_count >= one_time_limit {
+			break
+		}
 	}
-	if first_time != value {
+	if first_time_t.After(value_t) {
 		bot.db.UpdateActionValue(first_time, "wownews")
 	}
 
