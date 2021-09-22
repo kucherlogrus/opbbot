@@ -88,7 +88,7 @@ func (bot *OPB_Bot) updateWoWNews() {
 		if err != nil {
 			continue
 		}
-		if last_time_t.Before(value_t) {
+		if last_time_t.Before(value_t) || last_time_t.Equal(value_t) {
 			break
 		}
 		fmt.Printf("Handle title %s: %s\n", new_el.Tittle, last_time)
