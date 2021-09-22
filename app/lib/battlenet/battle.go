@@ -519,6 +519,7 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 	case "a":
 		ref, exist := s.Attr("href")
 		if exist {
+			ref = strings.Replace(ref, "https://urldefense.com/v3/__", "", -1)
 			text += s.Text() + ": " + ref + "\n"
 		} else {
 			text += "  * " + s.Text() + "\n"

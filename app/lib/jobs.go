@@ -71,13 +71,13 @@ func (bot *OPB_Bot) updateWoWNews() {
 
 	var first_time = news_list[0].Timestr
 
-	first_time_t, err := time.Parse(time.RFC3339, value)
+	first_time_t, err := time.Parse(time.RFC3339, first_time)
 
-	if first_time_t.Before(value_t) {
+	if first_time_t.Before(value_t) || first_time_t.Equal(value_t) {
 		fmt.Println("Last news was already handled.")
 		return
 	}
-
+	fmt.Println("Latest new time in battle.net: ", first_time)
 	fmt.Println("Last handled new time: ", value)
 
 	var one_time_limit = 5
@@ -91,8 +91,6 @@ func (bot *OPB_Bot) updateWoWNews() {
 		if last_time_t.Before(value_t) {
 			break
 		}
-		fmt.Println(last_time, value)
-
 		fmt.Printf("Handle title %s: %s\n", new_el.Tittle, last_time)
 		new_text, err_n := bot.handler.battlenet.GetNewFromUrl(new_el.URL)
 		if err_n != nil {
@@ -130,7 +128,10 @@ func (bot *OPB_Bot) updateWoWNews() {
 			break
 		}
 	}
+	fmt.Println(first_time_t, value_t)
+	fmt.Println("Update new time value: ", first_time_t.After(value_t))
 	if first_time_t.After(value_t) {
+		fmt.Println("Update new time value: ", first_time)
 		bot.db.UpdateActionValue(first_time, "wownews")
 	}
 

@@ -59,9 +59,10 @@ func (bot *OPB_Bot) Start() {
 			bot.Egsupdates()
 		}
 		if m.Content == "/bot_exit" {
-			sc <- os.Kill
+			if m.ChannelID == test_channel_id {
+				sc <- os.Kill
+			}
 		}
-
 	})
 	bot.session.Identify.Intents = discordgo.IntentsGuildMessages
 	err := bot.session.Open()
@@ -71,7 +72,6 @@ func (bot *OPB_Bot) Start() {
 	}
 	bot.startCronJobs()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-
 	<-sc
 	bot.session.Close()
 }
