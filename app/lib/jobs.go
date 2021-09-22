@@ -98,7 +98,11 @@ func (bot *OPB_Bot) updateWoWNews() {
 			continue
 		}
 
-		fmt.Println("len of text: ", len(new_text))
+		text_len := len(new_text)
+		fmt.Println("len of text: ", text_len)
+		if text_len == 0 {
+			continue
+		}
 
 		message := "**__" + new_el.Tittle + "__**\n" + new_text
 		max_index := 1999

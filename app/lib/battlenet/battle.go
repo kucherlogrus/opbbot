@@ -479,11 +479,17 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 			}
 
 		})
-	} else {
-		doc.Find("#blog").Children().Each(func(i int, s *goquery.Selection) {
-			text += bn.parse_text_element(s)
-		})
+		return
 	}
+
+	if strings.Contains(url_link, "потасовке-на-этой") {
+		return
+	}
+
+	doc.Find("#blog").Children().Each(func(i int, s *goquery.Selection) {
+		text += bn.parse_text_element(s)
+	})
+
 	return
 }
 
@@ -501,6 +507,12 @@ func (bn *Battlenet) parse_text_element(s *goquery.Selection) string {
 	}
 
 	var text = ""
+	if name == "p" && children_count > 0 {
+		s.Contents().Each(func(i int, s *goquery.Selection) {
+			text += bn.parse_text_element(s)
+		})
+		return text
+	}
 	s.Children().Each(func(i int, s *goquery.Selection) {
 		text += bn.parse_text_element(s)
 	})
@@ -511,21 +523,30 @@ func (bn *Battlenet) parse_text_element(s *goquery.Selection) string {
 func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 	var text = ""
 	name := goquery.NodeName(s)
+
+	raw_text := s.Text()
+	if len(raw_text) < 2 {
+		return text
+	}
+
 	switch name {
 	case "strong":
-		text += "**__" + s.Text() + "__**\n"
+		text += "**__" + raw_text + "__**\n"
 	case "li":
-		text += "  * " + s.Text() + "\n"
+		text += "  * " + raw_text + "\n"
 	case "a":
 		ref, exist := s.Attr("href")
 		if exist {
 			ref = strings.Replace(ref, "https://urldefense.com/v3/__", "", -1)
-			text += s.Text() + ": " + ref + "\n"
+			text += raw_text + ": " + ref + "\n"
 		} else {
-			text += "  * " + s.Text() + "\n"
+			text += "  * " + raw_text + "\n"
 		}
+	case "#text":
+		text += "  " + raw_text + "\n"
 	default:
 		text += s.Text() + "\n"
+
 	}
 	if goquery.NodeName(s.Parent()) == "ul" {
 		text = "  " + text
