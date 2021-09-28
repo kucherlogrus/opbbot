@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -48,7 +49,11 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 				now := time.Now()
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
 					if offer.DiscountSetting.DiscountPercentage == 0 {
-						productUrl := "https://www.epicgames.com/store/ru/p/" + element.ProductSlug
+						name_slug := element.ProductSlug
+						if strings.HasSuffix(name_slug, "/home") {
+							name_slug = strings.Replace(name_slug, "/home", "", 1)
+						}
+						productUrl := "https://www.epicgames.com/store/ru/p/" + name_slug
 						games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
 					}
 
