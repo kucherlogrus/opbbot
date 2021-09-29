@@ -497,27 +497,23 @@ func (bn *Battlenet) parse_text_element(s *goquery.Selection) string {
 
 	children_count := s.Children().Length()
 	name := goquery.NodeName(s)
-	if children_count == 0 || children_count == 1 && name == "li" {
+	if children_count == 0 {
 		tag_text := bn.tag_handle(s)
 		if debug {
 			fmt.Printf("<%s>: %q\n", name, tag_text)
 		}
-
 		return tag_text
 	}
 
 	var text = ""
-	if name == "p" && children_count > 0 {
+	if children_count > 0 {
 		s.Contents().Each(func(i int, s *goquery.Selection) {
 			text += bn.parse_text_element(s)
 		})
 		return text
 	}
-	s.Children().Each(func(i int, s *goquery.Selection) {
-		text += bn.parse_text_element(s)
-	})
-
 	return text
+
 }
 
 func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
@@ -525,7 +521,7 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 	name := goquery.NodeName(s)
 
 	raw_text := s.Text()
-	if len(raw_text) < 2 {
+	if len(raw_text) < 4 {
 		return text
 	}
 
@@ -533,6 +529,8 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 	case "strong":
 		text += "**__" + raw_text + "__**\n"
 	case "li":
+		text += "  * " + raw_text + "\n"
+	case "em":
 		text += "  * " + raw_text + "\n"
 	case "a":
 		ref, exist := s.Attr("href")
@@ -543,7 +541,7 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 			text += "  * " + raw_text + "\n"
 		}
 	case "#text":
-		text += "  " + raw_text + "\n"
+		text += raw_text + "\n"
 	default:
 		text += s.Text() + "\n"
 
@@ -551,7 +549,21 @@ func (bn *Battlenet) tag_handle(s *goquery.Selection) string {
 	if goquery.NodeName(s.Parent()) == "ul" {
 		text = "  " + text
 	}
+	text = bn._textNormalize(text)
+	return text
+}
+
+func (bn *Battlenet) _textNormalize(text string) string {
 	text = strings.Replace(text, "\t", "", -1)
 	text = strings.Replace(text, "\n\n", "", -1)
+	var chars = []string{"[", "]", ","}
+	for _, c := range chars {
+		if strings.HasPrefix(text, c) {
+			text = strings.Replace(text, c, "", 1)
+		}
+	}
+	if text == "\n" {
+		text = ""
+	}
 	return text
 }
