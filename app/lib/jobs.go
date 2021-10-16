@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"opb_bot/lib/egs"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -138,5 +139,20 @@ func (bot *OPB_Bot) updateWoWNews() {
 		fmt.Println("Update new time value: ", first_time)
 		bot.db.UpdateActionValue(first_time, "wownews")
 	}
+}
 
+func (bot *OPB_Bot) updateAffixes() {
+	resp, err := bot.handler.raider.GetCurrentAffixes()
+	if err != nil {
+		fmt.Println("Error raiderio api call, ", err)
+	}
+	affixes := resp.AffixDetails
+	var text_affixes []string
+	text_affixes = append(text_affixes, "Аффиксы:\n-----------")
+
+	for _, aff := range affixes {
+		text_affixes = append(text_affixes, fmt.Sprintf("%s : %s\n", aff.Name, aff.Description))
+	}
+	message := strings.Join(text_affixes, "\n")
+	bot.session.ChannelMessageSend(main_channel_id, message)
 }

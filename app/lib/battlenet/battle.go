@@ -96,6 +96,11 @@ func (bn *Battlenet) InitBattlenetApi(db_instance *db.DBHandler) error {
 	return nil
 }
 
+func (bn *Battlenet) TokenVerify() (err error) {
+	err = bn.checkTokenValid()
+	return
+}
+
 func (bn *Battlenet) refreshToken() (err error) {
 	resp, err := GetBattleNetToken(bn.Token.Client, bn.Token.Secret)
 	if err != nil {

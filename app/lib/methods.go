@@ -31,7 +31,13 @@ func (handler *BotHandler) Clear(s *discordgo.Session, m *discordgo.MessageCreat
 }
 
 func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCreate) {
-	params := strings.Split(m.Content, " ")
+	raw_params := strings.Split(m.Content, " ")
+	params := []string{}
+	for _, param := range raw_params {
+		if param != "" {
+			params = append(params, param)
+		}
+	}
 	var realm, name string
 	params_count := len(params)
 	if params_count == 1 {
@@ -45,7 +51,8 @@ func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCrea
 		name = params[2]
 		realm = params[1]
 	}
-	fmt.Println(params)
+	name = strings.Trim(name, " ")
+	realm = strings.Trim(realm, " ")
 	result, err := handler.raider.GetUserInfo(realm, name)
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Ошибка: %s", err))

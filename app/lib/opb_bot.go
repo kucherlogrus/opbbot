@@ -77,8 +77,13 @@ func (bot *OPB_Bot) Start() {
 }
 
 func (bot *OPB_Bot) startCronJobs() {
-	scheduler := gocron.NewScheduler(time.UTC)
-	_, err := scheduler.Cron("*/10 7-18 * * 1-5").Do(bot.updateWoWNews)
+	location, err := time.LoadLocation("Europe/Kiev")
+	if err != nil {
+		panic("Can't gen location time. ")
+	}
+
+	scheduler := gocron.NewScheduler(location)
+	_, err = scheduler.Cron("*/10 10-21 * * 1-5").Do(bot.updateWoWNews)
 	if err != nil {
 		fmt.Println("Can't init cron job checkCron")
 		return
@@ -88,5 +93,12 @@ func (bot *OPB_Bot) startCronJobs() {
 		fmt.Println("Can't init cron job checkCron")
 		return
 	}
+
+	_, err = scheduler.Cron("15 10 * * 3").Do(bot.updateAffixes)
+	if err != nil {
+		fmt.Println("Can't init cron job checkCron")
+		return
+	}
+
 	scheduler.StartAsync()
 }

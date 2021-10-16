@@ -52,6 +52,10 @@ func InitHandler(b_handler *BotHandler, db_instance *db.DBHandler) error {
 	fmt.Println("raider.io ready")
 	b_handler.battlenet = &battlenet.Battlenet{}
 	b_handler.battlenet.InitBattlenetApi(b_handler.db_instance)
+	err := b_handler.battlenet.TokenVerify()
+	if err != nil {
+		panic(fmt.Errorf("Can't verify access token", err))
+	}
 	fmt.Println("Battle.net ready")
 	fmt.Printf("Battle.net affixes count: %d\n", len(b_handler.battlenet.Affixes_map))
 	fmt.Printf("Battle.net dungeons count: %d\n", len(b_handler.battlenet.Dungeon_map))
@@ -70,6 +74,9 @@ func HandleIncomingMessage(handler *BotHandler, s *discordgo.Session, m *discord
 	if command != "" {
 		method, ok := handler.Methods[command]
 		if ok {
+			if m.ChannelID == main_channel_id {
+				s.ChannelMessageDelete(main_channel_id, m.ID)
+			}
 			in := []reflect.Value{reflect.ValueOf(handler), reflect.ValueOf(s), reflect.ValueOf(m)}
 			method.Func.Call(in)
 		}
