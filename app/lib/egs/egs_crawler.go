@@ -50,6 +50,9 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
 					if offer.DiscountSetting.DiscountPercentage == 0 {
 						name_slug := element.ProductSlug
+						if name_slug == "" {
+							name_slug = element.URLSlug
+						}
 						if strings.HasSuffix(name_slug, "/home") {
 							name_slug = strings.Replace(name_slug, "/home", "", 1)
 						}
