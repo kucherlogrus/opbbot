@@ -88,7 +88,7 @@ func (bot *OPB_Bot) startCronJobs() {
 		fmt.Println("Can't init cron job checkCron")
 		return
 	}
-	_, err = scheduler.Cron("1 12 * * 1-5").Do(bot.Egsupdates)
+	_, err = scheduler.Cron("10 9,12,15,18,21 * * *").Do(bot.Egsupdates)
 	if err != nil {
 		fmt.Println("Can't init cron job checkCron")
 		return
