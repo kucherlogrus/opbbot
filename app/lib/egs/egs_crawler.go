@@ -43,10 +43,9 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 		if offers == nil {
 			continue
 		}
-
+		now := time.Now()
 		for _, offerParent := range offers {
 			for _, offer := range offerParent.PromotionalOffers {
-				now := time.Now()
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
 					if offer.DiscountSetting.DiscountPercentage == 0 {
 						name_slug := element.ProductSlug
