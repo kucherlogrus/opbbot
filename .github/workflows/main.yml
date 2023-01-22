@@ -1,0 +1,17 @@
+on:
+  workflow_dispatch:
+    name: rebuild bot with new version
+    runs-on: ubuntu-latest
+    uses: appleboy/ssh-action@v0.1.7
+    with: 
+      host: ${{ secrets.BOT_HOST }}
+      username: ${{ secrets.BOT_USERNAME }}
+      key: ${{ secrets.PEM_KEY }}
+      script: |
+        cd /var/opbbot 
+        git pull
+        docker build . --tag=opb_bot
+        docker container stop opb_bot
+        docker container rm opb_bot
+        docker run --name opb_bot -d --restart=on-failure:10 -v '/var/opbbot/bot.db:/app/bot.db' opb_bot
+        
