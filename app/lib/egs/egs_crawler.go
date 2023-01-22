@@ -10,6 +10,7 @@ import (
 )
 
 const egs_url = "https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=ru&country=UA&allowCountries=UA"
+const egs_game_url_main_part = "https://www.epicgames.com/store/ru/p/"
 
 type EGSGame struct {
 	ID          string
@@ -19,6 +20,7 @@ type EGSGame struct {
 }
 
 func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
+
 	res, err := http.Get(egs_url)
 	if err != nil {
 		return nil, err
@@ -56,8 +58,21 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 						if strings.HasSuffix(name_slug, "/home") {
 							name_slug = strings.Replace(name_slug, "/home", "", 1)
 						}
-						productUrl := "https://www.epicgames.com/store/ru/p/" + name_slug
+						//In cases when we can't find product url by slug or url slug is wrong.
+						//e627683054b14bf1b1c7f4e8769eca54 - example of wrong url slug
+						if len(name_slug) > 30 && !strings.Contains(name_slug, "-") {
+							for _, catalog_mapping := range element.CatalogNs.Mappings {
+								if catalog_mapping.PageType == "productHome" {
+									productUrl := egs_game_url_main_part + catalog_mapping.PageSlug
+									games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+									continue
+								}
+							}
+							continue
+						}
+						productUrl := egs_game_url_main_part + name_slug
 						games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+						continue
 					}
 
 				}
