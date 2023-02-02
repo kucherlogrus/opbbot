@@ -23,7 +23,7 @@ const oauth_url = "https://us.battle.net/oauth/token"
 const debug = false
 
 const api_url = "https://eu.api.blizzard.com"
-const news_url = "https://worldofwarcraft.com/ru-ru/news"
+const news_url = "https://worldofwarcraft.com/en-gb/news"
 
 type Affix struct {
 	ID          int
