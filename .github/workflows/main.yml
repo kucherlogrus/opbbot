@@ -19,6 +19,7 @@ jobs:
           docker container stop opb_bot
           docker container rm opb_bot
           docker run --name opb_bot -p='8080:8080' -d --restart=on-failure:10 -v '/var/opbbot/bot.db:/app/bot.db' opb_bot
-          message=$(git show -s --format='%an <%ae> %cD\nCommit: %h\nMessage: %s')
+          message=$(git show -s --format='%an <%ae> %cD%nCommit: %h%nMessage: %s')
+          sleep 10
           curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "message=$message" http://localhost:8080/version_update
         
