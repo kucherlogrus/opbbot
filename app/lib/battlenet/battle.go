@@ -461,7 +461,7 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 	var in_last_news = false
 	var can_append = true
 	text = ""
-	if strings.Contains(url_link, "срочные-исправления") {
+	if strings.Contains(url_link, "hotfixes") {
 		doc.Find(".detail").Children().Each(func(i int, s *goquery.Selection) {
 			if !can_append {
 				return
