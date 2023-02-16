@@ -156,3 +156,7 @@ func (bot *OPB_Bot) updateAffixes() {
 	message := strings.Join(text_affixes, "\n")
 	bot.session.ChannelMessageSend(main_channel_id, message)
 }
+
+func (bot *OPB_Bot) newVersionBotNotification(message string) {
+	bot.session.ChannelMessageSend(main_channel_id, message)
+}

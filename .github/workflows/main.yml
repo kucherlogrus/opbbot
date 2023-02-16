@@ -19,4 +19,5 @@ jobs:
           docker container stop opb_bot
           docker container rm opb_bot
           docker run --name opb_bot -d --restart=on-failure:10 -v '/var/opbbot/bot.db:/app/bot.db' opb_bot
+          curl -I http://localhost:8080/version_update
         

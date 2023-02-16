@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/go-co-op/gocron"
+	"net/http"
 	"opb_bot/lib/db"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -71,9 +73,15 @@ func (bot *OPB_Bot) Start() {
 		return
 	}
 	bot.startCronJobs()
+	http.HandleFunc("/version_update", bot.gitHook)
+	http_server := &http.Server{Addr: ":8080", Handler: nil}
+	go func() {
+		http_server.ListenAndServe()
+	}()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	<-sc
 	bot.session.Close()
+	http_server.Close()
 }
 
 func (bot *OPB_Bot) startCronJobs() {
@@ -101,4 +109,18 @@ func (bot *OPB_Bot) startCronJobs() {
 	}
 
 	scheduler.StartAsync()
+}
+
+func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
+	out, err := exec.Command("git", "show", "-s", "--format=%an <%ae> %cD\nCommit: %h\nMessage: %s").Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	bot_msg := "Bot updated to new version: \n-----------------------------\n"
+	message := string(out)
+	message = bot_msg + message
+	message = message + "\n-----------------------------"
+	fmt.Println(message)
+	bot.newVersionBotNotification(message)
+	fmt.Fprintf(w, "OK")
 }
