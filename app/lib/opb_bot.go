@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"opb_bot/lib/db"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -112,12 +111,9 @@ func (bot *OPB_Bot) startCronJobs() {
 }
 
 func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
-	out, err := exec.Command("git", "show", "-s", "--format=%an <%ae> %cD\nCommit: %h\nMessage: %s").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
+	r.ParseForm()
+	message := r.Form.Get("message")
 	bot_msg := "Bot updated to new version: \n-----------------------------\n"
-	message := string(out)
 	message = bot_msg + message
 	message = message + "\n-----------------------------"
 	fmt.Println(message)
