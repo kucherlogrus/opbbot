@@ -60,10 +60,12 @@ func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCrea
 	var message = ""
 	message += fmt.Sprintf("Имя: %s\n", result.Name)
 	message += fmt.Sprintf("Сервер: %s\n", result.Realm)
-	message += fmt.Sprintf("Рейтинг: %d\n", int(result.MythicPlusScoresBySeason[0].Scores.All))
-	r := result.LastCrawledAt
-	scan_time := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", r.Day(), r.Month(), r.Year(), r.Hour(), r.Minute(), r.Second())
-	message += fmt.Sprintf("Дата обновления raider.io: %s\n", scan_time)
+	message += fmt.Sprintf("Уровень экипировки': **__%d__**\n", result.Gear.ItemLevelEquipped)
+	message += fmt.Sprintf("Рейтинг:  **__%d__**\n", int(result.MythicPlusScoresBySeason[0].Scores.All))
+	message += fmt.Sprintf("Место: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.Overall.World, result.MythicPlusRanks.Overall.Realm)
+	message += fmt.Sprintf("Место по классу: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.Class.World, result.MythicPlusRanks.Class.Realm)
+	message += fmt.Sprintf("Место по фракции: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.FactionOverall.World, result.MythicPlusRanks.FactionOverall.Realm)
+	message += fmt.Sprintf("Место по фракции и классу: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.FactionClass.World, result.MythicPlusRanks.FactionClass.Realm)
 	message += fmt.Sprintf("-----------------------------------\n")
 	for _, instance := range result.MythicPlusBestRuns {
 		t := instance.CompletedAt
@@ -72,20 +74,18 @@ func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCrea
 		sec := tm / 1000
 		msec := tm % 1000
 		tm_time := time.Unix(int64(sec), int64(msec*int(time.Millisecond)))
-		tm_time_str := fmt.Sprintf("%d минут %d секунд", tm_time.Minute(), tm_time.Second())
+		tm_time_str := fmt.Sprintf("%d мин. %d сек.", tm_time.Minute(), tm_time.Second())
 		dungeon_name := handler.battlenet.Dungeon_map[instance.Dungeon]
-		message += fmt.Sprintf("%s **__%d__**, пройден %s за %s. Аффиксы: ", dungeon_name.Name, instance.MythicLevel, complete_at, tm_time_str)
-		for index, afix := range instance.Affixes {
-			afix_name := handler.battlenet.Affixes_map[afix.Name].Name
-			if index == len(instance.Affixes)-1 {
-
-				message += fmt.Sprintf("%s\n", afix_name)
-				continue
-			}
-			message += fmt.Sprintf("%s, ", afix_name)
-		}
+		time_for_clean := instance.ParTimeMs
+		sec = time_for_clean / 1000
+		msec = time_for_clean % 1000
+		time_for_clean_tm := time.Unix(int64(sec), int64(msec*int(time.Millisecond)))
+		message += fmt.Sprintf("%s **__%d__**, пройден %s за %s. Время на прохождение: %d мин\n", dungeon_name.Name, instance.MythicLevel, complete_at, tm_time_str, time_for_clean_tm.Minute())
 	}
-
+	message += fmt.Sprintf("-----------------------------------\n")
+	r := result.LastCrawledAt
+	scan_time := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", r.Day(), r.Month(), r.Year(), r.Hour(), r.Minute(), r.Second())
+	message += fmt.Sprintf("Дата обновления raider.io: %s\n", scan_time)
 	s.ChannelMessageSend(m.ChannelID, message)
 }
 
