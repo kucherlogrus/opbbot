@@ -451,7 +451,7 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Can't get news from battle net. ", resp.StatusCode)
+		return "", fmt.Errorf("Can't get news from battle net. %d\n", resp.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)

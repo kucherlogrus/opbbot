@@ -104,10 +104,14 @@ func (bot *OPB_Bot) updateWoWNews() {
 		if text_len == 0 {
 			continue
 		}
-
-		message := "**__" + new_el.Tittle + "__**\n" + new_text
+		var message string
+		gpt_message, gpt_err := bot.chat_gpt_client.GetCompletion(new_text)
+		if gpt_err != nil || len(gpt_message) < 20 {
+			message = "**__" + new_el.Tittle + "__**\n" + new_text
+		} else {
+			message = "**__" + new_el.Tittle + "__**\n" + gpt_message
+		}
 		max_index := 1999
-
 		index := max_index
 		for {
 			count := len(message)
@@ -151,10 +155,6 @@ func (bot *OPB_Bot) updateAffixes() {
 	text_affixes = append(text_affixes, "Аффиксы:\n-----------")
 
 	for _, aff := range affixes {
-		if aff.Name == "Thundering" {
-			text_affixes = append(text_affixes, fmt.Sprint("Рокочущий : Запас здоровья противников увеличивается на 5% . В бою игроков иногда наполняет стихийная сила неукротимой бури Рашагет. Эта мощь таит в себе великую опасность: если не высвободить заряд вовремя, последствия будут оглушительны.\n"))
-			continue
-		}
 		text_affixes = append(text_affixes, fmt.Sprintf("%s : %s\n", aff.Name, aff.Description))
 	}
 	message := strings.Join(text_affixes, "\n")

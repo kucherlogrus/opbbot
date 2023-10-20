@@ -6,16 +6,19 @@ import (
 	"github.com/go-co-op/gocron"
 	"net/http"
 	"opb_bot/lib/db"
+	"opb_bot/lib/gpt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
 
 type OPB_Bot struct {
-	session *discordgo.Session
-	db      *db.DBHandler
-	handler *BotHandler
+	session         *discordgo.Session
+	db              *db.DBHandler
+	handler         *BotHandler
+	chat_gpt_client *gpt.OpenaiApiClient
 }
 
 func InitBot() (bot *OPB_Bot, err error) {
@@ -44,7 +47,9 @@ func InitBot() (bot *OPB_Bot, err error) {
 		return nil, err
 	}
 	fmt.Println("Bot handlers initialised")
-	bot = &OPB_Bot{session, dbHandler, bot_handler}
+	chat_gpt_api_key := os.Getenv("OPENAI_API_KEY")
+	chat_gpt_client := gpt.InitOpenaiApiClient(chat_gpt_api_key)
+	bot = &OPB_Bot{session, dbHandler, bot_handler, chat_gpt_client}
 	return
 }
 
@@ -62,6 +67,11 @@ func (bot *OPB_Bot) Start() {
 		if m.Content == "/bot_exit" {
 			if m.ChannelID == test_channel_id {
 				sc <- os.Kill
+			}
+		}
+		if strings.HasPrefix(m.Content, "/wow_new_parse") {
+			if m.ChannelID == test_channel_id {
+				bot.parseWoWNew(m.Content)
 			}
 		}
 	})
@@ -119,4 +129,42 @@ func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(message)
 	bot.newVersionBotNotification(message)
 	fmt.Fprintf(w, "OK")
+}
+
+func (bot *OPB_Bot) parseWoWNew(content string) {
+	url := strings.Replace(content, "/wow_new_parse", "", 1)
+	url = strings.TrimSpace(url)
+	new_text, err_n := bot.handler.battlenet.GetNewFromUrl(url)
+	fmt.Println("text from new: ", new_text)
+	if err_n != nil {
+		fmt.Println(err_n)
+		return
+	}
+	message, err := bot.chat_gpt_client.GetCompletion(new_text)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(message)
+	max_index := 1999
+	index := max_index
+	for {
+		count := len(message)
+		if count <= 2000 {
+			bot.session.ChannelMessageSend(test_channel_id, message+"\n")
+			bot.session.ChannelMessageSend(test_channel_id, "------------------------------------------------------------------\n")
+			break
+		}
+		for {
+			char := message[index]
+			if char == ' ' {
+				send_message := message[:index]
+				message = message[index:]
+				bot.session.ChannelMessageSend(test_channel_id, send_message)
+				index = max_index
+				break
+			}
+			index--
+		}
+	}
 }
