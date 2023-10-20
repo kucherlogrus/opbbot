@@ -450,6 +450,7 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 	}
 
 	defer resp.Body.Close()
+	fmt.Println(resp.StatusCode)
 	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("Can't get news from battle net. %d\n", resp.StatusCode)
 	}
@@ -461,22 +462,26 @@ func (bn *Battlenet) GetNewFromUrl(url_link string) (text string, error error) {
 	var in_last_news = false
 	var can_append = true
 	text = ""
+	hr_count := 0
 	if strings.Contains(url_link, "hotfixes") {
 		doc.Find(".detail").Children().Each(func(i int, s *goquery.Selection) {
 			if !can_append {
 				return
 			}
 			name := goquery.NodeName(s)
-			if name == "h4" && !in_last_news {
+			if name == "h2" && !in_last_news {
 				text += bn.parse_text_element(s)
 				in_last_news = true
 				return
 			}
 
-			if name == "h4" && in_last_news {
-				in_last_news = false
-				can_append = false
-				return
+			if name == "hr" && in_last_news {
+				hr_count += 1
+				if hr_count == 2 {
+					in_last_news = false
+					can_append = false
+					return
+				}
 			}
 
 			if in_last_news {

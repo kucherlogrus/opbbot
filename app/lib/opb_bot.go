@@ -134,12 +134,19 @@ func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
 func (bot *OPB_Bot) parseWoWNew(content string) {
 	url := strings.Replace(content, "/wow_new_parse", "", 1)
 	url = strings.TrimSpace(url)
+	fmt.Println("url:", url)
 	new_text, err_n := bot.handler.battlenet.GetNewFromUrl(url)
+	fmt.Println("text from url len: ", len(new_text))
 	fmt.Println("text from new: ", new_text)
 	if err_n != nil {
 		fmt.Println(err_n)
 		return
 	}
+	if len(new_text) == 0 {
+		fmt.Println("Can't get text from url")
+		return
+	}
+
 	message, err := bot.chat_gpt_client.GetCompletion(new_text)
 	if err != nil {
 		fmt.Println(err)
