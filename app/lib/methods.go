@@ -60,12 +60,10 @@ func (handler *BotHandler) Raider(s *discordgo.Session, m *discordgo.MessageCrea
 	var message = ""
 	message += fmt.Sprintf("Имя: %s\n", result.Name)
 	message += fmt.Sprintf("Сервер: %s\n", result.Realm)
-	message += fmt.Sprintf("Уровень экипировки': **__%d__**\n", result.Gear.ItemLevelEquipped)
+	message += fmt.Sprintf("Уровень экипировки': **__%.2f__**\n", result.Gear.ItemLevelEquipped)
 	message += fmt.Sprintf("Рейтинг:  **__%d__**\n", int(result.MythicPlusScoresBySeason[0].Scores.All))
 	message += fmt.Sprintf("Место: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.Overall.World, result.MythicPlusRanks.Overall.Realm)
 	message += fmt.Sprintf("Место по классу: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.Class.World, result.MythicPlusRanks.Class.Realm)
-	message += fmt.Sprintf("Место по фракции: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.FactionOverall.World, result.MythicPlusRanks.FactionOverall.Realm)
-	message += fmt.Sprintf("Место по фракции и классу: мир **__%d__**, сервер **__%d__**\n", result.MythicPlusRanks.FactionClass.World, result.MythicPlusRanks.FactionClass.Realm)
 	message += fmt.Sprintf("-----------------------------------\n")
 	for _, instance := range result.MythicPlusBestRuns {
 		t := instance.CompletedAt
@@ -150,4 +148,58 @@ func (handler *BotHandler) Affixesall(s *discordgo.Session, m *discordgo.Message
 		return
 	}
 	utils.PrintType(send)
+}
+
+func (handler *BotHandler) ReloadBattleNetDungeons(s *discordgo.Session, m *discordgo.MessageCreate) {
+	err_n := handler.battlenet.ReloadBattleNetData()
+	if err_n != nil {
+		s.ChannelMessageSend(test_channel_id, err_n.Error()+"\n")
+		return
+	}
+	s.ChannelMessageSend(test_channel_id, "Battle.net data reloaded\n")
+}
+
+func (bot *OPB_Bot) parseWoWNew(content string) {
+	url := strings.Replace(content, "/wow_new_parse", "", 1)
+	url = strings.TrimSpace(url)
+	fmt.Println("url:", url)
+	new_text, err_n := bot.handler.battlenet.GetNewFromUrl(url)
+	fmt.Println("text from url len: ", len(new_text))
+	fmt.Println("text from new: ", new_text)
+	if err_n != nil {
+		fmt.Println(err_n)
+		return
+	}
+	if len(new_text) == 0 {
+		fmt.Println("Can't get text from url")
+		return
+	}
+
+	message, err := bot.chat_gpt_client.GetCompletion(new_text)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(message)
+	max_index := 1999
+	index := max_index
+	for {
+		count := len(message)
+		if count <= 2000 {
+			bot.session.ChannelMessageSend(test_channel_id, message+"\n")
+			bot.session.ChannelMessageSend(test_channel_id, "------------------------------------------------------------------\n")
+			break
+		}
+		for {
+			char := message[index]
+			if char == ' ' {
+				send_message := message[:index]
+				message = message[index:]
+				bot.session.ChannelMessageSend(test_channel_id, send_message)
+				index = max_index
+				break
+			}
+			index--
+		}
+	}
 }

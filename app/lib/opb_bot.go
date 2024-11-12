@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/go-co-op/gocron"
 	"net/http"
 	"opb_bot/lib/db"
 	"opb_bot/lib/gpt"
@@ -11,7 +10,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 )
 
 type OPB_Bot struct {
@@ -74,6 +72,11 @@ func (bot *OPB_Bot) Start() {
 				bot.parseWoWNew(m.Content)
 			}
 		}
+		if m.Content == "/battle_net_reload" {
+			if m.ChannelID == test_channel_id {
+				bot.handler.ReloadBattleNetDungeons(bot.session, m)
+			}
+		}
 	})
 	bot.session.Identify.Intents = discordgo.IntentsGuildMessages
 	err := bot.session.Open()
@@ -94,30 +97,30 @@ func (bot *OPB_Bot) Start() {
 }
 
 func (bot *OPB_Bot) startCronJobs() {
-	location, err := time.LoadLocation("Europe/Kiev")
-	if err != nil {
-		panic("Can't gen location time. ")
-	}
+	//location, err := time.LoadLocation("Europe/Kiev")
+	//if err != nil {
+	//	panic("Can't gen location time. ")
+	//}
 
-	scheduler := gocron.NewScheduler(location)
-	_, err = scheduler.Cron("*/10 10-21 * * 1-5").Do(bot.updateWoWNews)
-	if err != nil {
-		fmt.Println("Can't init cron job checkCron")
-		return
-	}
-	_, err = scheduler.Cron("10 9,12,15,18,21 * * *").Do(bot.Egsupdates)
-	if err != nil {
-		fmt.Println("Can't init cron job checkCron")
-		return
-	}
+	//scheduler := gocron.NewScheduler(location)
+	//_, err = scheduler.Cron("*/10 10-21 * * 1-5").Do(bot.updateWoWNews)
+	//if err != nil {
+	//	fmt.Println("Can't init cron job checkCron")
+	//	return
+	//}
+	//_, err = scheduler.Cron("10 9,12,15,18,21 * * *").Do(bot.Egsupdates)
+	//if err != nil {
+	//	fmt.Println("Can't init cron job checkCron")
+	//	return
+	//}
 
-	_, err = scheduler.Cron("15 10 * * 3").Do(bot.updateAffixes)
-	if err != nil {
-		fmt.Println("Can't init cron job checkCron")
-		return
-	}
-
-	scheduler.StartAsync()
+	//_, err = scheduler.Cron("15 10 * * 3").Do(bot.updateAffixes)
+	//if err != nil {
+	//	fmt.Println("Can't init cron job checkCron")
+	//	return
+	//}
+	//
+	//scheduler.StartAsync()
 }
 
 func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
@@ -129,49 +132,4 @@ func (bot *OPB_Bot) gitHook(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(message)
 	bot.newVersionBotNotification(message)
 	fmt.Fprintf(w, "OK")
-}
-
-func (bot *OPB_Bot) parseWoWNew(content string) {
-	url := strings.Replace(content, "/wow_new_parse", "", 1)
-	url = strings.TrimSpace(url)
-	fmt.Println("url:", url)
-	new_text, err_n := bot.handler.battlenet.GetNewFromUrl(url)
-	fmt.Println("text from url len: ", len(new_text))
-	fmt.Println("text from new: ", new_text)
-	if err_n != nil {
-		fmt.Println(err_n)
-		return
-	}
-	if len(new_text) == 0 {
-		fmt.Println("Can't get text from url")
-		return
-	}
-
-	message, err := bot.chat_gpt_client.GetCompletion(new_text)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(message)
-	max_index := 1999
-	index := max_index
-	for {
-		count := len(message)
-		if count <= 2000 {
-			bot.session.ChannelMessageSend(test_channel_id, message+"\n")
-			bot.session.ChannelMessageSend(test_channel_id, "------------------------------------------------------------------\n")
-			break
-		}
-		for {
-			char := message[index]
-			if char == ' ' {
-				send_message := message[:index]
-				message = message[index:]
-				bot.session.ChannelMessageSend(test_channel_id, send_message)
-				index = max_index
-				break
-			}
-			index--
-		}
-	}
 }

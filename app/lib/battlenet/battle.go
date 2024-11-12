@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-//curl -u client:secret -d grant_type=client_credentials https://us.battle.net/oauth/token
+//curl -u client:secret -d grant_type=client_credentials https://oauth.battle.net/token
 
-const oauth_url = "https://us.battle.net/oauth/token"
+const oauth_url = "https://oauth.battle.net/token"
 
 const debug = false
 
@@ -92,7 +92,23 @@ func (bn *Battlenet) InitBattlenetApi(db_instance *db.DBHandler) error {
 			return fmt.Errorf("Can't init battle net api: ", err)
 		}
 	}
+	return nil
+}
 
+func (bn *Battlenet) ReloadBattleNetData() error {
+	bn.refreshToken()
+	var dungeons []Dungeon
+	dungeons, err := bn.getDungeonsFromBattleNet()
+	if err != nil {
+		return fmt.Errorf("Can't init battle net api: ", err)
+	}
+	err = bn.saveDungeons(dungeons)
+	for _, dungeon := range dungeons {
+		bn.Dungeon_map[dungeon.EngName] = dungeon
+	}
+	if err != nil {
+		return fmt.Errorf("Can't init battle net api: ", err)
+	}
 	return nil
 }
 
@@ -107,6 +123,7 @@ func (bn *Battlenet) refreshToken() (err error) {
 		fmt.Println("Error: ", err)
 	}
 	expires := time.Now().Add(time.Duration(resp.ExpiresIn))
+	fmt.Println("Battle.net: refresh token", resp.AccessToken, expires)
 	bn.db_instance.RefreshAccessToken("battlenet", resp.AccessToken, expires)
 	service, err := bn.db_instance.GetService("battlenet")
 	if err != nil {
@@ -315,12 +332,16 @@ func (bn *Battlenet) __callApi(method string, endpoint string, params map[string
 			qparams.Add("namespace", "static-eu")
 		}
 		full_url := api_url + endpoint + "?" + qparams.Encode()
-		fmt.Println(full_url)
-		resp, err = http.Get(full_url)
-		defer resp.Body.Close()
+		request, err_resp := http.NewRequest("GET", full_url, nil)
+		if err_resp != nil {
+			return nil, err_resp
+		}
+		request.Header.Add("Authorization", "Bearer "+token)
+		resp, err = http.DefaultClient.Do(request)
 		if err != nil {
 			return nil, err
 		}
+		defer resp.Body.Close()
 		var body []byte
 		body, err = ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != 200 {
