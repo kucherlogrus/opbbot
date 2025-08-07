@@ -14,6 +14,9 @@ COPY /app/main.go /app/main.go
 
 EXPOSE 8080
 
+ENV CGO_ENABLED=1
+ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
+
 RUN go build -o /opb_bot
 
 CMD [ "/opb_bot" ]
