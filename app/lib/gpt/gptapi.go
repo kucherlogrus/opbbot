@@ -32,7 +32,7 @@ func InitOpenaiApiClient(api_key string) (client *OpenaiApiClient) {
 func (client *OpenaiApiClient) GetCompletion(prompt string) (string, error) {
 	promt_text := client.prompt + prompt
 	r := completionsRequest{
-		Model: "gpt-4o",
+		Model: "gpt-5",
 		Messages: []Message{
 			{
 				Role:    "user",
