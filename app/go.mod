@@ -1,6 +1,6 @@
 module opb_bot
 
-go 1.17
+go 1.24
 
 require (
 	github.com/PuerkitoBio/goquery v1.7.1
