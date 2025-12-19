@@ -14,7 +14,6 @@ func (bot *OPB_Bot) Egsupdates() {
 	if err != nil {
 		fmt.Println("Error ParseFreeEgsGamesUrls,", err)
 	}
-
 	chat_free_games := map[string]string{}
 	r, _ := regexp.Compile("#id:(.*)\n")
 	messages_raw, _ := bot.session.ChannelMessages(free_games_channel_id, 0, "", "", "")

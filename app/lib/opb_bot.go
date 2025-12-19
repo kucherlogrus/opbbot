@@ -2,8 +2,6 @@ package lib
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/go-co-op/gocron"
 	"net/http"
 	"opb_bot/lib/db"
 	"opb_bot/lib/gpt"
@@ -12,6 +10,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/go-co-op/gocron"
 )
 
 type OPB_Bot struct {

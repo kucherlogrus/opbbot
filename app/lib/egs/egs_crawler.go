@@ -57,30 +57,9 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 						if strings.HasSuffix(name_slug, "/home") {
 							name_slug = strings.Replace(name_slug, "/home", "", 1)
 						}
-						/*
-								//In cases when we can't find product url by slug or url slug is wrong.
-								//e627683054b14bf1b1c7f4e8769eca54 - example of wrong url slug - it doesn't work after 07-08-2025. Epics added to link few simbols:
-								"urlSlug": "road-redemption", - and this link is broken
-								"catalogNs": {
-									"mappings": [
-										{
-										"pageSlug": "road-redemption-ce16fb", - correct link
-										"pageType": "productHome"
-										}
-									]
-								},
-							   For this new iteration just get product url from catalogNs.Mappings.  Other code seems work fine.
-						*/
-						for _, catalog_mapping := range element.CatalogNs.Mappings {
-							if catalog_mapping.PageType == "productHome" {
-								productUrl := egs_game_url_main_part + catalog_mapping.PageSlug
-								games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
-								continue
-							}
-						}
-						//productUrl := egs_game_url_main_part + name_slug
-						//games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
-						//continue
+						productUrl := egs_game_url_main_part + name_slug
+						games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+						continue
 					}
 
 				}
