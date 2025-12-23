@@ -15,7 +15,9 @@ var char_gpt_prompt = `
 Его нужно перевести на русский, адаптировав учитывая вселенную. 
 После перевода к тексту нужно добавить обзац с общей информацией - выжимкой (Не более 400 символов) по этой новости на русском языке.
 Также нужно отформатировать discord теги, чтобы было более читабельно для человека.
-Вот текст: `
+Вот текст: 
+###################################
+`
 
 type OpenaiApiClient struct {
 	http_client *http.Client
@@ -32,7 +34,7 @@ func InitOpenaiApiClient(api_key string) (client *OpenaiApiClient) {
 func (client *OpenaiApiClient) GetCompletion(prompt string) (string, error) {
 	promt_text := client.prompt + prompt
 	r := completionsRequest{
-		Model: "gpt-5",
+		Model: "gpt-5.2",
 		Messages: []Message{
 			{
 				Role:    "user",
