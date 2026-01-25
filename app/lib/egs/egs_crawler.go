@@ -50,6 +50,28 @@ func ParseFreeEgsGamesUrls() (map[string]*EGSGame, error) {
 			for _, offer := range offerParent.PromotionalOffers {
 				if offer.StartDate.Before(now) && offer.EndDate.After(now) {
 					if offer.DiscountSetting.DiscountPercentage == 0 {
+						/* EGS offer change product link.
+						There is two possible structures:
+							- It can be catalogNs -> mappings -> pageSlug. 1st priority
+						    - Or it can be productSlug / urlSlug. 2nd priority
+						*/
+
+						// Try to get pageSlug from catalogNs mappings
+						catalog := element.CatalogNs
+						if catalog.Mappings != nil && len(catalog.Mappings) > 0 {
+							first_entry := catalog.Mappings[0]
+							if first_entry.PageSlug != "" {
+								catalog_name := first_entry.PageSlug
+								if strings.HasSuffix(catalog_name, "/home") {
+									catalog_name = strings.Replace(catalog_name, "/home", "", 1)
+								}
+								productUrl := egs_game_url_main_part + first_entry.PageSlug
+								games[element.ID] = &EGSGame{element.ID, productUrl, element.Description, element.Title}
+								continue
+							}
+						}
+
+						// Fallback to productSlug / urlSlug
 						name_slug := element.ProductSlug
 						if name_slug == "" {
 							name_slug = element.URLSlug
